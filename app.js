@@ -106,5 +106,4 @@ app.post("/delete", (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
   console.log("The server has started!");
 });
-
 /* #endregion */
