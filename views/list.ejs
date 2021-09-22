@@ -1,0 +1,32 @@
+<%- include('partials/header'); -%>
+
+<div class="box" id="heading">
+  <h1>
+    <%= listTitle %>
+  </h1>
+</div>
+
+<div class="listbox">
+  <ul>
+    <!-- Using EJS Sciplets to make a for loop and make list items -->
+    <% newItems.forEach((item)=>{ %>
+
+    <form action="/delete" method="POST">
+      <div class="item">
+        <!-- onChange of status of checkbox the form is submitted, and a name "checkbox" with value "item checked's ID" is also sent -->
+        <input type="checkbox" name="checkbox" value="<%= item._id %>" onChange="this.form.submit()">
+        <p>
+          <%= item.name %>
+        </p>
+      </div>
+
+    </form>
+    <% }) %>
+  </ul>
+  <form class="item" action="/" method="POST">
+    <input type="text" placeholder="Enter the new List Item." name="listItem" autocomplete="off">
+    <button type="submit" name="list" value=<%= listTitle %>>+</button>
+  </form>
+</div>
+
+<%- include('partials/footer'); -%>
