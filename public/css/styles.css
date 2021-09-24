@@ -120,3 +120,24 @@ footer {
 footer p {
   font-size: small;
 }
+
+.list {
+  padding: 10%;
+  text-align: center;
+}
+.list a {
+  font-weight: 600;
+  padding: 10px;
+  display: inline;
+  margin: auto 10px;
+  text-decoration: none;
+  border-radius: 10%;
+  border: #fff;
+  border-width: 2px;
+  border-style: solid;
+  box-shadow: 3px 2px white;
+}
+
+.list a:hover {
+  color: white;
+}

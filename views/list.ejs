@@ -31,4 +31,12 @@
   </form>
 </div>
 
+<div class="list">
+  <a href="/">Home</a>
+  <% listList.forEach((listName)=>{ %>
+  <a href="<%= `/list/${listName}` %>"><%= listName %></a>
+  <% }) %>
+</div>
+
+
 <%- include('partials/footer'); -%>

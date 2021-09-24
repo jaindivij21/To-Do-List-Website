@@ -13,7 +13,7 @@ const day = require(__dirname + "/public/javascripts/date.js");
 // APP CONST
 /* #region   */
 const app = express();
-app.use(express.static("public")); // serves static files
+app.use(express.static(__dirname + "/public")); // serves static files
 app.set("view engine", "ejs"); // EJS Templating : Tells our app to use EJS as its view engine
 app.use(express.urlencoded({ extended: true })); // body parser
 /* #endregion */
@@ -77,15 +77,23 @@ app.get("/", (req, res) => {
         });
         res.redirect("/");
       } else {
-        // use EJS's render function to get list.html by passing variable day string (the key being kindOfDay)
-        res.render("list", { listTitle: currDate, newItems: items });
+        List.distinct("name", (err, result) => {
+          if (!err) {
+            // use EJS's render function to get list.html by passing variable day string (the key being kindOfDay)
+            res.render("list", {
+              listList: result,
+              listTitle: currDate,
+              newItems: items,
+            });
+          }
+        });
       }
     }
   });
 });
 
 // non index page route
-app.get("/:customListName", (req, res) => {
+app.get("/list/:customListName", (req, res) => {
   const customListName = _.capitalize(req.params.customListName); // save the name of the route
   // Whenever the user tries to access a new Route, need to make a new list DOCUMENT for that route in the database if it doesn't already exist
   List.findOne({ name: customListName }, (err, foundList) => {
@@ -101,12 +109,17 @@ app.get("/:customListName", (req, res) => {
         list.save(); // then add a new list
 
         // redirect the route back
-        res.redirect(`/${customListName}`);
+        res.redirect(`/list/${customListName}`);
       } else {
-        // if list found : show the list
-        res.render("list", {
-          listTitle: customListName,
-          newItems: foundList.items,
+        List.distinct("name", (err, result) => {
+          if (!err) {
+            // if list found : show the list
+            res.render("list", {
+              listTitle: customListName,
+              newItems: foundList.items,
+              listList: result,
+            });
+          }
         });
       }
     }
@@ -133,7 +146,7 @@ app.post("/", (req, res) => {
       else {
         foundList.items.push(item); // add the new item in the array inside of the object found list
         foundList.save(); // save the entire object
-        res.redirect(`/${listName}`);
+        res.redirect(`/list/${listName}`);
       }
     });
   }
@@ -164,7 +177,7 @@ app.post("/delete", (req, res) => {
       { $pull: { items: { _id: checkedItemID } } },
       (err, foundList) => {
         if (!err) {
-          res.redirect(`/${listName}`);
+          res.redirect(`/list/${listName}`);
         }
       }
     );
