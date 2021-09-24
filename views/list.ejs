@@ -7,6 +7,7 @@
 </div>
 
 <div class="listbox">
+
   <ul>
     <!-- Using EJS Sciplets to make a for loop and make list items -->
     <% newItems.forEach((item)=>{ %>
@@ -19,10 +20,11 @@
           <%= item.name %>
         </p>
       </div>
-
+      <input type="hidden" name="list" value="<%= listTitle %>">
     </form>
     <% }) %>
   </ul>
+
   <form class="item" action="/" method="POST">
     <input type="text" placeholder="Enter the new List Item." name="listItem" autocomplete="off">
     <button type="submit" name="list" value=<%= listTitle %>>+</button>

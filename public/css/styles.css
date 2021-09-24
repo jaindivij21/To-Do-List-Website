@@ -22,7 +22,7 @@ ul {
 }
 
 .box {
-  max-width: 400px;
+  width: 400px;
   margin: 50px auto;
   background: white;
   border-radius: 5px;

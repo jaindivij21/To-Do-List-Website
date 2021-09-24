@@ -2,9 +2,11 @@
 
 //  REQUIREMENTS
 /* #region   */
+const e = require("express");
 const express = require("express");
 const https = require("https"); // used to get and post (usually) API requests
 const mongoose = require("mongoose"); // require database
+const _ = require("lodash");
 const day = require(__dirname + "/public/javascripts/date.js");
 /* #endregion */
 
@@ -19,7 +21,7 @@ app.use(express.urlencoded({ extended: true })); // body parser
 //* MAIN
 
 // SETUP DATABASE
-/* #region   */
+/* #region */
 // Database name
 const dbName = "todolistDB";
 // connection URL
@@ -47,7 +49,7 @@ const List = mongoose.model("List", listSchema);
 
 // default 3 items in the database (array)
 const defaultItems = [
-  { name: "Welcome to you TO-DO LIST :)" },
+  { name: "Welcome to your TO-DO LIST :)" },
   { name: "Hit the + button to add a new item." },
   { name: "<-- Hit this checkbox to delete an item" },
 ];
@@ -84,23 +86,28 @@ app.get("/", (req, res) => {
 
 // non index page route
 app.get("/:customListName", (req, res) => {
-  const customListName = req.params.customListName; // save the name of the route
+  const customListName = _.capitalize(req.params.customListName); // save the name of the route
   // Whenever the user tries to access a new Route, need to make a new list DOCUMENT for that route in the database if it doesn't already exist
-  List.findOne({ name: customListName }, (err, item) => {
+  List.findOne({ name: customListName }, (err, foundList) => {
     if (err) console.log(err);
     else {
-      if (item === null) {
+      //? Note Item is an Object
+      if (!foundList) {
         // couldn't find
         const list = new List({
           name: customListName,
           items: defaultItems,
         });
         list.save(); // then add a new list
+
+        // redirect the route back
+        res.redirect(`/${customListName}`);
       } else {
-        // if list found
-        const name = item.name;
-        const items = item.items;
-        console.log(name, items);
+        // if list found : show the list
+        res.render("list", {
+          listTitle: customListName,
+          newItems: foundList.items,
+        });
       }
     }
   });
@@ -108,31 +115,60 @@ app.get("/:customListName", (req, res) => {
 
 // index page : post request (new Item form)
 app.post("/", (req, res) => {
+  const currDate = day.getDate();
   // req the data posted back through a form into a variable
   const itemName = req.body.listItem;
-
-  // store this new Item into the MongoDB data base (in a new document)
+  const listName = req.body.list;
+  // store this new Item into the MongoDB data base (in a new document) -> now decide where to insert this document
+  // in Item collection? then just save.
   const item = new Item({ name: itemName });
-  item.save();
-
-  // redirect to home route
-  res.redirect("/");
+  if (listName === currDate.substr(0, currDate.indexOf(" "))) {
+    item.save(); // saves into the Item Collection
+    // redirect to home route
+    res.redirect("/");
+  } else {
+    // found list is an object that contains array
+    List.findOne({ name: listName }, (err, foundList) => {
+      if (err) console.log(err);
+      else {
+        foundList.items.push(item); // add the new item in the array inside of the object found list
+        foundList.save(); // save the entire object
+        res.redirect(`/${listName}`);
+      }
+    });
+  }
 });
 
 // index page: post request (delete item form)
 app.post("/delete", (req, res) => {
+  const currDate = day.getDate();
   const checkedItemID = req.body.checkbox;
+  const listName = req.body.list;
 
-  // Delete the item by using the above ID
-  Item.findByIdAndRemove(checkedItemID, (err) => {
-    if (err) console.log(err);
-    else {
-      console.log("Successfully deleted the item!");
-    }
-  });
-
-  // Redirect to the index page
-  res.redirect("/");
+  // check which list are we deleting from
+  if (currDate === listName) {
+    // main list
+    // Delete the item by using the above ID
+    Item.findByIdAndRemove(checkedItemID, (err) => {
+      if (err) console.log(err);
+      else {
+        console.log("Successfully deleted the item!");
+      }
+    });
+    // Redirect to the index page
+    res.redirect("/");
+  } else {
+    //? Documentation: https://docs.mongodb.com/manual/reference/operator/update/pull/
+    List.findOneAndUpdate(
+      { name: listName },
+      { $pull: { items: { _id: checkedItemID } } },
+      (err, foundList) => {
+        if (!err) {
+          res.redirect(`/${listName}`);
+        }
+      }
+    );
+  }
 });
 /* #endregion */
 
